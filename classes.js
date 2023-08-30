@@ -62,7 +62,48 @@ class ViewAllRoles extends ParentClass {
 
 class AddRole extends ParentClass {
     furtherInquiry() {
-        return console.log('User chose AddRole');
+        inquirer.prompt([
+            {
+                type: 'input',
+                name: 'roleName',
+                message: 'What is the name of the role you want to create?',
+            },
+            {
+                type: 'input',
+                name: 'roleSalary',
+                message: 'What is the salary of the role you want to create?',
+            },
+            {
+                type: 'input',
+                name: 'roleDepartment',
+                message: 'What is the department id linked to the role you want to create? View department table for further info',
+            }
+        ]).then(({roleName, roleSalary, roleDepartment}) => {
+            db.query(`
+            SELECT EXISTS (SELECT 1 FROM roles WHERE title = '${roleName}') AS varCheck
+            `, (err, result) => {
+                if (err) {
+                    console.error(`Failed to run filter command, ${err}`);
+                } else {
+                    const check = result[0].varCheck;
+                    if (check === 1) {
+                        console.log(`Role already exists!`);
+                        repeatMainQ();
+                    } else {
+                        db.query(`
+                        INSERT INTO roles (title, salary, department_id)
+                        VALUES ('${roleName}', ${roleSalary}, ${roleDepartment});
+                        `, (err, result) => {
+                            if (err) {
+                                console.error(`Failed to insert inputs, ${err}`);
+                            } else {
+                                console.log(`Successfully added new role!`);
+                                repeatMainQ();
+                        }
+                    }) 
+                }}
+            });
+        })
     }
 };
 
@@ -85,14 +126,27 @@ class AddDepartment extends ParentClass {
             }
         ]).then(({departmentCreation}) => {
             db.query(`
-            INSERT INTO departments (dep_name)
-            VALUES ('${departmentCreation}');
+            SELECT EXISTS (SELECT 1 FROM departments WHERE dep_name = '${departmentCreation}') AS varCheck
             `, (err, result) => {
                 if (err) {
-                    console.error(`Error adding department, ${err}`);
+                    console.error(`Failed to run filter command, ${err}`);
                 } else {
-                    console.log('Department successfully added!');
-                    repeatMainQ();
+                    const check = result[0].varCheck;
+                    if (check === 1) {
+                        console.log(`Department already exists!`);
+                        repeatMainQ();
+                    } else {
+                        db.query(`
+                        INSERT INTO departments (dep_name)
+                        VALUES ('${departmentCreation}');
+                        `, (err, result) => {
+                            if (err) {
+                                console.error(`Error adding department, ${err}`);
+                            } else {
+                                console.log('Successfully added new department!');
+                                repeatMainQ();
+                      }})
+                   }
                 }
             });
         })
@@ -109,6 +163,7 @@ class Exit {
             }
         ]).then(({exitConfirm}) => {
             if (exitConfirm === true) {
+                console.log('Bye bye!');
                 process.exit();
             } else {
                 repeatMainQ();
