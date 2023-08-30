@@ -41,7 +41,88 @@ ORDER BY employee.id ASC;
 
 class AddEmployee extends ParentClass {
     furtherInquiry() {
-        return console.log('User chose AddEmployee');
+        db.query(`SELECT title, id FROM roles`, (err, result) => {
+            if (err) {
+                console.error(`Could not select roles, ${err}`);
+            } else {
+                const mappedRes = result.map((role) => role.title);
+                db.query(`SELECT first_name, last_name, id FROM employee`, (err1, result1) => {
+                    if (err) {
+                        console.error(`Could not select names, ${err1}`);
+                    } else {
+                        const mapped2 = result1.map((role1) => `${role1.first_name} ${role1.last_name}`);
+                        mapped2.push(`NULL`);
+                    inquirer.prompt([
+                        {
+                            type: 'input',
+                            name: 'employeeName',
+                            message: 'Enter first name of new employee:',
+                        },
+                        {
+                            type: 'input',
+                            name: 'employeeLastName',
+                            message: 'Enter last name:',
+                        },
+                        {
+                            type: 'list',
+                            name: 'roleId',
+                            message: `What is this employee's role?`,
+                            choices: mappedRes,
+                        },
+                        {
+                            type: 'list',
+                            name: 'managerName',
+                            message: `What is the name of this employee's manager?`,
+                            choices: mapped2,
+                        }
+                    ]).then(({employeeName, employeeLastName, roleId, managerName}) => {
+                        if (managerName !== 'NULL') {
+                            const splitManager = managerName.split(" ");
+                            const {managerFirstName, managerLastName} = splitManager;
+                            result.forEach(role => {
+                                if (role.title === roleId) {
+                                    const roleINT = role.id;
+                                    result1.forEach(employee => {
+                                        if (employee.first_name === managerFirstName && employee.last_name === managerLastName) {
+                                            const managerINT = employee.id;
+                                            db.query(`
+                                            INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                                            VALUES ('${employeeName}', '${employeeLastName}', ${roleINT}, ${managerINT});
+                                            `, (err, result) => {
+                                                if (err) {
+                                                    console.error(`Failed to insert employee into table, ${err}`);
+                                                } else {
+                                                    console.log(`Successfully added employee!`);
+                                                    repeatMainQ();
+                                                 }
+                                            })
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            result.forEach(role => {
+                                if (role.title === roleId) {
+                                    const roleINT = role.id;
+                                    db.query(`
+                                    INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                                    VALUES ('${employeeName}', '${employeeLastName}', ${roleINT}, ${managerName});
+                                    `, (err, result) => {
+                                        if (err) {
+                                            console.error(`Failed to insert employee into table, ${err}`);
+                                        } else {
+                                            console.log(`Successfully added employee!`);
+                                            repeatMainQ();
+                                        }
+                                    })
+                                }
+                            });
+                        }
+                    })
+                    }
+                })
+            }
+        })
     }
 };
 
