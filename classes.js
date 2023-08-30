@@ -1,10 +1,11 @@
 const mysql = require('mysql2');
+const inquirer = require('inquirer');
 
 const db = mysql.createConnection(
   {
     host: 'localhost',
     user: 'root',
-    password: '', //put password here
+    password: '$$BBridge19', //put password here
     database: 'employee_tracker'
   },
   console.log(`Connected to the database.`)
@@ -28,7 +29,8 @@ JOIN departments ON roles.department_id = departments.id
 LEFT JOIN employee managing ON employee.manager_id = managing.id
 ORDER BY employee.id ASC;
         `, (err, results) => {
-            console.table(results);
+          console.table(results);
+          repeatMainQ();
         })
     }
 };
@@ -53,7 +55,10 @@ class ViewAllRoles {
     constructor() {
     } 
     furtherInquiry() {
-        return console.log('User chose ViewAllRoles');
+        db.query(`SELECT * FROM roles`, (err, result) => {
+            console.table(result);
+            repeatMainQ();
+        });
     }
 };
 
@@ -69,7 +74,10 @@ class ViewAllDepartments {
     constructor() {
     } 
     furtherInquiry() {
-        return console.log('User chose ViewAllDepartments');
+        db.query(`SELECT * FROM departments`, (err, result) => {
+            console.table(result);
+            repeatMainQ();
+        })
     }
 };
 
@@ -80,6 +88,33 @@ class AddDepartment {
         return console.log('User chose AddDepartment');
     }
 };
+
+class Exit {
+    constructor() {
+    }
+    furtherInquiry() {
+        inquirer.prompt([
+            {
+                type: 'confirm',
+                name: 'exitConfirm',
+                message: 'Are you sure you want to exit?',
+            }
+        ]).then(({exitConfirm}) => {
+            if (exitConfirm === true) {
+                process.exit();
+            } else {
+                repeatMainQ();
+            }
+        })
+    }
+}
+
+const repeatMainQ = () => {
+    const CLI = require('./cli');
+    const newCLI = new CLI();
+    newCLI.inquire();
+};
+
 module.exports = {
     ViewAllEmployees,
     AddEmployee,
@@ -88,4 +123,5 @@ module.exports = {
     ViewAllRoles,
     AddRole,
     AddDepartment,
+    Exit,
 };
