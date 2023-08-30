@@ -5,15 +5,19 @@ const db = mysql.createConnection(
   {
     host: 'localhost',
     user: 'root',
-    password: '$$BBridge19', //put password here
+    password: '', //put password here
     database: 'employee_tracker'
   },
   console.log(`Connected to the database.`)
 );
 
-class ViewAllEmployees {
-    constructor() {
-    } 
+class ParentClass {
+    constructor(input) {
+        this.input = input;
+    }
+}
+
+class ViewAllEmployees extends ParentClass {
     furtherInquiry() {
         db.query(`
         SELECT employee.id as id,
@@ -35,25 +39,19 @@ ORDER BY employee.id ASC;
     }
 };
 
-class AddEmployee {
-    constructor() {
-    } 
+class AddEmployee extends ParentClass {
     furtherInquiry() {
         return console.log('User chose AddEmployee');
     }
 };
 
-class UpdateEmployeeRole {
-    constructor() {
-    } 
+class UpdateEmployeeRole extends ParentClass {
     furtherInquiry() {
         return console.log('User chose UpdateEmployeeRole');
     }
 };
 
-class ViewAllRoles {
-    constructor() {
-    } 
+class ViewAllRoles extends ParentClass {
     furtherInquiry() {
         db.query(`SELECT * FROM roles`, (err, result) => {
             console.table(result);
@@ -62,17 +60,13 @@ class ViewAllRoles {
     }
 };
 
-class AddRole {
-    constructor() {
-    } 
+class AddRole extends ParentClass {
     furtherInquiry() {
         return console.log('User chose AddRole');
     }
 };
 
-class ViewAllDepartments {
-    constructor() {
-    } 
+class ViewAllDepartments extends ParentClass {
     furtherInquiry() {
         db.query(`SELECT * FROM departments`, (err, result) => {
             console.table(result);
@@ -81,17 +75,31 @@ class ViewAllDepartments {
     }
 };
 
-class AddDepartment {
-    constructor() {
-    } 
+class AddDepartment extends ParentClass {
     furtherInquiry() {
-        return console.log('User chose AddDepartment');
+        inquirer.prompt([
+            {
+                type: 'input',
+                name: 'departmentCreation',
+                message: 'What is the department you want to create?',
+            }
+        ]).then(({departmentCreation}) => {
+            db.query(`
+            INSERT INTO departments (dep_name)
+            VALUES ('${departmentCreation}');
+            `, (err, result) => {
+                if (err) {
+                    console.error(`Error adding department, ${err}`);
+                } else {
+                    console.log('Department successfully added!');
+                    repeatMainQ();
+                }
+            });
+        })
     }
 };
 
 class Exit {
-    constructor() {
-    }
     furtherInquiry() {
         inquirer.prompt([
             {
