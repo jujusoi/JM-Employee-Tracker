@@ -444,6 +444,46 @@ class ViewEmployeesByManager {
     }
 }
 
+class DeleteDepartment {
+    furtherInquiry() {
+        db.query(`
+        SELECT * FROM departments
+        `, (err, res) => {
+            if (err) {
+                console.error(`Could not select from database, ${err}`);
+            } else {
+            const mapped = res.map((dep) => dep.dep_name);
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'selectedDep',
+                    message: 'Which department do you want to delete?',
+                    choices: mapped,
+                }
+            ]).then(({selectedDep}) => {
+                res.forEach(obj => {
+                    if (obj.dep_name === selectedDep) {
+                        const depId = obj.id;
+                        db.query(`
+                        DELETE FROM departments WHERE id = ${depId}
+                        `, (error, result) => {
+                            if (error) {
+                                console.error(`Could not delete department, ensure there are no roles or employees connected, ${error}`);
+                                repeatMainQ();
+                            } else {
+                                console.log(`Successfully deleted department!`);
+                                repeatMainQ();
+                            }
+                        })
+                    }
+                });
+            })
+           }
+         }
+       )
+    }
+}
+
             
 class Exit {
     furtherInquiry() {
@@ -482,4 +522,5 @@ module.exports = {
     TotalBudgetByDepartment,
     ViewEmployeesByDepartment,
     ViewEmployeesByManager,
+    DeleteDepartment,
 };
