@@ -129,7 +129,68 @@ class AddEmployee extends ParentClass {
 
 class UpdateEmployeeRole extends ParentClass {
     furtherInquiry() {
-        return console.log('User chose UpdateEmployeeRole');
+        db.query(`
+        SELECT first_name, last_name, id FROM employee
+        `, (err, result) => {
+            if (err) {
+                console.error(`Could not retrieve information from database, ${err}`);
+            } else {
+                const mapped = result.map((employee) => `${employee.first_name} ${employee.last_name}`);
+                inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'employeeName',
+                        message: 'Which employee do you want to change?',
+                        choices: mapped,
+                    }
+                ]).then(({employeeName}) => {
+                    console.log(`Selected ${employeeName}`);
+                    const splitEmployee = employeeName.split(" ");
+                    const empFirst = splitEmployee[0];
+                    const empSecond = splitEmployee[1];
+                    result.forEach(employee => {
+                        if (employee.first_name === empFirst && employee.last_name === empSecond) {
+                            const employeeId = employee.id;
+                            db.query(`
+                            SELECT title, id FROM roles
+                            `, (err2, result2) => {
+                                if (err2) {
+                                    console.error(`Could not select from database, ${err2}`);
+                                } else {
+                                    const mapped2 = result2.map((role) => role.title);
+                                    inquirer.prompt([
+                                        {
+                                            type: 'list',
+                                            name: 'employeeRole',
+                                            message: 'Which new role do you want them to have?',
+                                            choices: mapped2,
+                                        }
+                                    ]).then(({employeeRole}) => {
+                                        result2.forEach(role => {
+                                            if (role.title === employeeRole) {
+                                                const roleINT = role.id;
+                                                db.query(`
+                                                UPDATE employee
+                                                SET role_id = ${roleINT}
+                                                WHERE id = ${employeeId}
+                                                `, (err3, result3) => {
+                                                    if (err3) {
+                                                        console.error(`Failed to update employee role, ${err3}`);
+                                                    } else {
+                                                        console.log(`Successfully updated employee role!`);
+                                                        repeatMainQ();
+                                                    }
+                                                })
+                                            }
+                                        });
+                                    })
+                                }
+                            })
+                        }
+                    });
+                })
+            }
+        })
     }
 };
 
