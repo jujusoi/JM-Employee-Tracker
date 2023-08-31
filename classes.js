@@ -78,7 +78,8 @@ class AddEmployee extends ParentClass {
                     ]).then(({employeeName, employeeLastName, roleId, managerName}) => {
                         if (managerName !== 'NULL') {
                             const splitManager = managerName.split(" ");
-                            const {managerFirstName, managerLastName} = splitManager;
+                            const managerFirstName = splitManager[0];
+                            const managerLastName = splitManager[1];
                             result.forEach(role => {
                                 if (role.title === roleId) {
                                     const roleINT = role.id;
@@ -140,7 +141,6 @@ class ViewAllRoles extends ParentClass {
         });
     }
 };
-
 class AddRole extends ParentClass {
     furtherInquiry() {
         inquirer.prompt([
