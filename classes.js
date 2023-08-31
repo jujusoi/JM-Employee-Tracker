@@ -19,6 +19,13 @@ class ParentClass {
 
 class ViewAllEmployees extends ParentClass {
     furtherInquiry() {
+        const result = this.viewQuery().then((result) => {
+            console.table(result);
+            repeatMainQ();
+        });
+    }
+    viewQuery() {
+        return new Promise((resolve, reject) => {
         db.query(`
         SELECT employee.id as id,
        employee.first_name as first_name,
@@ -33,8 +40,12 @@ JOIN departments ON roles.department_id = departments.id
 LEFT JOIN employee managing ON employee.manager_id = managing.id
 ORDER BY employee.id ASC;
         `, (err, results) => {
-          console.table(results);
-          repeatMainQ();
+            if (err) {
+                reject(err)
+            } else {
+                resolve(results);
+            }
+          })
         })
     }
 };
@@ -348,6 +359,35 @@ class TotalBudgetByDepartment {
     }
 }
 
+class ViewEmployeesByDepartment {
+    furtherInquiry() {
+        db.query(`
+        SELECT * FROM departments
+        `, (err1, res1) => {
+            const mapped = res1.map((dep) => dep.dep_name);
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'selectedDepartment',
+                    message: 'Department to choose by:',
+                    choices: mapped,
+                }
+            ]).then(({selectedDepartment}) => {
+                const view = new ViewAllEmployees();
+                view.viewQuery().then((query) => {
+                    query.forEach(obj => {
+                        if (obj.department === selectedDepartment) {
+                            console.log(`${obj.first_name} ${obj.last_name}`);
+                        }
+                    });
+                    console.log(`All employees for department listed!`);
+                    repeatMainQ();
+                });
+            })
+        })
+    }
+}
+
             
 class Exit {
     furtherInquiry() {
@@ -384,4 +424,5 @@ module.exports = {
     AddDepartment,
     Exit,
     TotalBudgetByDepartment,
+    ViewEmployeesByDepartment,
 };
