@@ -202,6 +202,7 @@ class ViewAllRoles extends ParentClass {
         });
     }
 };
+
 class AddRole extends ParentClass {
     furtherInquiry() {
         inquirer.prompt([
@@ -295,6 +296,59 @@ class AddDepartment extends ParentClass {
     }
 };
 
+class TotalBudgetByDepartment {
+    furtherInquiry() {
+        db.query(`
+        SELECT id, dep_name FROM departments
+        `, (err, result) => {
+            if (err) {
+                console.error(`Could not select from database, ${err}`);
+            } else {
+                const mapped = result.map((department) => department.dep_name);
+                inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'selectDepartment',
+                        message: 'Department to choose by:',
+                        choices: mapped,
+                    }
+                ]).then(({selectDepartment}) => {
+                    const selectedDepartment = result.find(dep => dep.dep_name === selectDepartment);
+                    db.query(`
+                    SELECT id, salary FROM roles WHERE department_id = ${selectedDepartment.id};
+                    `, (err2, res2) => {
+                        if (err2) {
+                            console.error(`Could not select from database, ${err2}`);
+                        } else {
+                            let cost = 0;
+                            const roleIds = res2.map((obj) => obj.id);
+                            let completed = roleIds.length;
+                            roleIds.forEach(id => {
+                                db.query(`
+                                SELECT role_id FROM employee WHERE role_id = ${id};
+                                `, (err3, res3) => {
+                                    if (err3) {
+                                        console.error(`Could not select from database, ${err3}`);
+                                    } else {
+                                        const employeeCount = res3.length;
+                                        cost += res2.find(obj => obj.id === id).salary * employeeCount;
+                                        completed--;
+                                        if (completed <= 0) {
+                                            console.log(`The total budget for this department is $${cost}`);
+                                            repeatMainQ();
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    });
+                })
+            }
+        })
+    }
+}
+
+            
 class Exit {
     furtherInquiry() {
         inquirer.prompt([
@@ -329,4 +383,5 @@ module.exports = {
     AddRole,
     AddDepartment,
     Exit,
+    TotalBudgetByDepartment,
 };
