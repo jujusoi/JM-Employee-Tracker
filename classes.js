@@ -375,13 +375,69 @@ class ViewEmployeesByDepartment {
             ]).then(({selectedDepartment}) => {
                 const view = new ViewAllEmployees();
                 view.viewQuery().then((query) => {
+                    const arr = [];
                     query.forEach(obj => {
                         if (obj.department === selectedDepartment) {
-                            console.log(`${obj.first_name} ${obj.last_name}`);
+                            const newObj = {
+                                first_name: '',
+                                last_name: '',
+                                department: ''
+                            };
+                            newObj.first_name = obj.first_name;
+                            newObj.last_name = obj.last_name;
+                            newObj.department = selectedDepartment;
+                            arr.push(newObj);
                         }
                     });
+                    console.table(arr);
                     console.log(`All employees for department listed!`);
                     repeatMainQ();
+                });
+            })
+        })
+    }
+}
+
+class ViewEmployeesByManager {
+    furtherInquiry() {
+        db.query(`
+        SELECT * FROM employee WHERE manager_id IS NULL;
+        `, (err1, res1) => {
+            const mapped = res1.map((dep) => `${dep.first_name} ${dep.last_name}`);
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'selectedManager',
+                    message: ' to choose by:',
+                    choices: mapped,
+                }
+            ]).then(({selectedManager}) => {
+                const view = new ViewAllEmployees();
+                view.viewQuery().then((query) => {
+                    let str = '';
+                    const arr = [];
+                    query.forEach(obj => {
+                        if (obj.manager === selectedManager) {
+                            const newObj = {
+                                first_name: '',
+                                last_name: '',
+                                manager: ''
+                            };
+                            newObj.first_name = obj.first_name;
+                            newObj.last_name = obj.last_name;
+                            newObj.manager = selectedManager;
+                            arr.push(newObj); 
+                            str = `${obj.first_name}`;
+                        }
+                    });
+                    if (str === '') {
+                        console.log(`No employees under selected manager!`);
+                        repeatMainQ();
+                    } else {
+                        console.table(arr);
+                        console.log(`All employees managed by ${selectedManager} listed!`);
+                        repeatMainQ();
+                    }
                 });
             })
         })
@@ -425,4 +481,5 @@ module.exports = {
     Exit,
     TotalBudgetByDepartment,
     ViewEmployeesByDepartment,
+    ViewEmployeesByManager,
 };

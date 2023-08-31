@@ -10,7 +10,7 @@ class CLI {
                 type: 'list',
                 name: 'firstQ',
                 message: 'What would you like to do?',
-                choices: ['View All Employees', 'Add Employee', 'Update Employee Role', 'View All Roles', 'Add Role', 'View All Departments', 'Add Department', 'Total Budget By Department', 'View Employees By Department', 'Exit'],
+                choices: ['View All Employees', 'Add Employee', 'Update Employee Role', 'View All Roles', 'Add Role', 'View All Departments', 'Add Department', 'Total Budget By Department', 'View Employees By Department', 'View Employees By Manager', 'Exit'],
             },
         ]).then(({firstQ}) => {
             const newResponse = firstQ.replace(/\s/g, "");
