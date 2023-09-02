@@ -484,6 +484,47 @@ class DeleteDepartment {
     }
 }
 
+
+class DeleteRole {
+    furtherInquiry() {
+        db.query(`
+        SELECT * FROM roles
+        `, (err, res) => {
+            if (err) {
+                console.error(`Could not select from database, ${err}`);
+            } else {
+            const mapped = res.map((role) => role.title);
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'selectedRole',
+                    message: 'Which role do you want to delete?',
+                    choices: mapped,
+                }
+            ]).then(({selectedRole}) => {
+                res.forEach(obj => {
+                    if (obj.title === selectedRole) {
+                        const depId = obj.id;
+                        db.query(`
+                        DELETE FROM roles WHERE id = ${depId}
+                        `, (error, result) => {
+                            if (error) {
+                                console.error(`Could not delete role, ensure there are no employees with role equipped, ${error}`);
+                                repeatMainQ();
+                            } else {
+                                console.log(`Successfully deleted role!`);
+                                repeatMainQ();
+                            }
+                        })
+                    }
+                });
+            })
+           }
+         }
+       )
+    }
+}
+
             
 class Exit {
     furtherInquiry() {
@@ -523,4 +564,5 @@ module.exports = {
     ViewEmployeesByDepartment,
     ViewEmployeesByManager,
     DeleteDepartment,
+    DeleteRole,
 };
