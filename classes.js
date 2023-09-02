@@ -525,6 +525,114 @@ class DeleteRole {
     }
 }
 
+
+class DeleteEmployee {
+    furtherInquiry() {
+        db.query(`
+        SELECT * FROM employee
+        `, (err, res) => {
+            if (err) {
+                console.error(`Could not select from database, ${err}`);
+            } else {
+            const mapped = res.map((employee) => `${employee.first_name} ${employee.last_name}`);
+            console.log(mapped);
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'selectedRole',
+                    message: 'Which role do you want to delete?',
+                    choices: mapped,
+                }
+            ]).then(({selectedRole}) => {
+                const split = selectedRole.split(" ");
+                const firstName = split[0];
+                const lastName = split[1];
+                res.forEach(obj => {
+                    if (obj.first_name === firstName && obj.last_name === lastName) {
+                        const depId = obj.id;
+                        db.query(`
+                        DELETE FROM employee WHERE id = ${depId}
+                        `, (error, result) => {
+                            if (error) {
+                                console.error(`Could not remove employee. Ensure they aren't the manager of any employees. ${error}`);
+                                repeatMainQ();
+                            } else {
+                                console.log(`Successfully removed employee from database!`);
+                                repeatMainQ();
+                            }   
+                        })
+                    }
+                });
+            })
+           }
+         }
+       )
+    }
+}
+
+class UpdateEmployeeManager {
+    furtherInquiry() {
+        db.query(`
+        SELECT * FROM employee
+        `, (err, res) => {
+            if (err) {
+                console.error(`Cannot select from database, ${err}`);
+                repeatMainQ();
+            } else {
+                const mapped = res.map((emp) => `${emp.first_name} ${emp.last_name}`);
+                inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'selectedEmployee',
+                        message: 'Which employee do you want to select?',
+                        choices: mapped,
+                    }
+                ]).then(({selectedEmployee}) => {
+                    console.log(selectedEmployee);
+                    const split = selectedEmployee.split(" ");
+                    const firstName = split[0];
+                    const lastName = split[1];
+                    res.forEach(employee => {
+                        if (employee.first_name === firstName && employee.last_name === lastName) {
+                            const employeeId = employee.id;
+                            inquirer.prompt([
+                                {
+                                    type: 'list',
+                                    name: 'selectedManager',
+                                    message: 'Who do you want managing your employee?',
+                                    choices: mapped,
+                                }
+                            ]).then(({selectedManager}) => {
+                                const split = selectedManager.split(" ");
+                                const managerName = split[0];
+                                const managerLast = split[1];
+                                res.forEach(person => {
+                                    if (person.first_name === managerName && person.last_name === managerLast) {
+                                        const managerId = person.id;
+                                        db.query(`
+                                        UPDATE employee
+                                        SET manager_id = ${managerId}
+                                        WHERE id = ${employeeId}
+                                        `, (err1, res1) => {
+                                            if (err1) {
+                                                console.error(`Could not update employee manager, ${err1}`);
+                                                repeatMainQ();
+                                            } else {
+                                                console.log(`Employee manager updated!`);
+                                                repeatMainQ();
+                                            }
+                                        })
+                                    }
+                                });
+                            })
+                        }
+                    });
+                })
+            }
+        })
+    }
+}
+
             
 class Exit {
     furtherInquiry() {
@@ -565,4 +673,6 @@ module.exports = {
     ViewEmployeesByManager,
     DeleteDepartment,
     DeleteRole,
+    DeleteEmployee,
+    UpdateEmployeeManager,
 };
