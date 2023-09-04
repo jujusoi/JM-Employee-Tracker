@@ -436,7 +436,7 @@ class ViewEmployeesByManager {
                 {
                     type: 'list',
                     name: 'selectedManager',
-                    message: ' to choose by:',
+                    message: 'Employee to choose by:',
                     choices: mapped,
                 }
             ]).then(({selectedManager}) => {

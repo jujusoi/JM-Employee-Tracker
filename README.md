@@ -38,7 +38,7 @@ As there's too many proccesses to describe accurately, I'll go over the simple o
 For modifying information in the database, usually all the user has to do is follow the instructions found whenever a prompt is chosen, and choose from a list that fits their needs.
 
 Video example:
-https://watch.screencastify.com/v/bLuaRD5WH5tIvgND4zYw
+https://watch.screencastify.com/v/DpvCwY4dAtIOuuGkVfs8
 
 Github Repo: 
 https://github.com/jujusoi/JM-Employee-Tracker
