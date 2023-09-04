@@ -55,11 +55,13 @@ class AddEmployee extends ParentClass {
         db.query(`SELECT title, id FROM roles`, (err, result) => {
             if (err) {
                 console.error(`Could not select roles, ${err}`);
+                repeatMainQ();
             } else {
                 const mappedRes = result.map((role) => role.title);
                 db.query(`SELECT first_name, last_name, id FROM employee`, (err1, result1) => {
                     if (err) {
                         console.error(`Could not select names, ${err1}`);
+                        repeatMainQ();
                     } else {
                         const mapped2 = result1.map((role1) => `${role1.first_name} ${role1.last_name}`);
                         mapped2.push(`NULL`);
@@ -103,6 +105,7 @@ class AddEmployee extends ParentClass {
                                             `, (err, result) => {
                                                 if (err) {
                                                     console.error(`Failed to insert employee into table, ${err}`);
+                                                    repeatMainQ();
                                                 } else {
                                                     console.log(`Successfully added employee!`);
                                                     repeatMainQ();
@@ -122,6 +125,7 @@ class AddEmployee extends ParentClass {
                                     `, (err, result) => {
                                         if (err) {
                                             console.error(`Failed to insert employee into table, ${err}`);
+                                            repeatMainQ();
                                         } else {
                                             console.log(`Successfully added employee!`);
                                             repeatMainQ();
@@ -145,6 +149,7 @@ class UpdateEmployeeRole extends ParentClass {
         `, (err, result) => {
             if (err) {
                 console.error(`Could not retrieve information from database, ${err}`);
+                repeatMainQ();
             } else {
                 const mapped = result.map((employee) => `${employee.first_name} ${employee.last_name}`);
                 inquirer.prompt([
@@ -167,6 +172,7 @@ class UpdateEmployeeRole extends ParentClass {
                             `, (err2, result2) => {
                                 if (err2) {
                                     console.error(`Could not select from database, ${err2}`);
+                                    repeatMainQ();
                                 } else {
                                     const mapped2 = result2.map((role) => role.title);
                                     inquirer.prompt([
@@ -216,7 +222,15 @@ class ViewAllRoles extends ParentClass {
 
 class AddRole extends ParentClass {
     furtherInquiry() {
-        inquirer.prompt([
+        db.query(`
+        SELECT * FROM departments
+        `, (err1, res1) => {
+            if (err1) {
+                console.error(`Could not select from database, ${err1}`);
+                repeatMainQ();
+            } else {
+                const mapped = res1.map((departments) => departments.dep_name);
+                 inquirer.prompt([
             {
                 type: 'input',
                 name: 'roleName',
@@ -228,16 +242,21 @@ class AddRole extends ParentClass {
                 message: 'What is the salary of the role you want to create?',
             },
             {
-                type: 'input',
+                type: 'list',
                 name: 'roleDepartment',
-                message: 'What is the department id linked to the role you want to create? View department table for further info',
+                message: 'Which department does your role belong in?',
+                choices: mapped,
             }
         ]).then(({roleName, roleSalary, roleDepartment}) => {
+            res1.forEach(dep => {
+                if (dep.dep_name === roleDepartment) {
+                    const depId = dep.id;
             db.query(`
             SELECT EXISTS (SELECT 1 FROM roles WHERE title = '${roleName}') AS varCheck
             `, (err, result) => {
                 if (err) {
                     console.error(`Failed to run filter command, ${err}`);
+                    repeatMainQ();
                 } else {
                     const check = result[0].varCheck;
                     if (check === 1) {
@@ -246,7 +265,7 @@ class AddRole extends ParentClass {
                     } else {
                         db.query(`
                         INSERT INTO roles (title, salary, department_id)
-                        VALUES ('${roleName}', ${roleSalary}, ${roleDepartment});
+                        VALUES ('${roleName}', ${roleSalary}, ${depId});
                         `, (err, result) => {
                             if (err) {
                                 console.error(`Failed to insert inputs, ${err}`);
@@ -257,6 +276,10 @@ class AddRole extends ParentClass {
                     }) 
                 }}
             });
+                }
+            });
+        })
+            }
         })
     }
 };
@@ -284,6 +307,7 @@ class AddDepartment extends ParentClass {
             `, (err, result) => {
                 if (err) {
                     console.error(`Failed to run filter command, ${err}`);
+                    repeatMainQ();
                 } else {
                     const check = result[0].varCheck;
                     if (check === 1) {
@@ -296,6 +320,7 @@ class AddDepartment extends ParentClass {
                         `, (err, result) => {
                             if (err) {
                                 console.error(`Error adding department, ${err}`);
+                                repeatMainQ();
                             } else {
                                 console.log('Successfully added new department!');
                                 repeatMainQ();
@@ -314,6 +339,7 @@ class TotalBudgetByDepartment {
         `, (err, result) => {
             if (err) {
                 console.error(`Could not select from database, ${err}`);
+                repeatMainQ();
             } else {
                 const mapped = result.map((department) => department.dep_name);
                 inquirer.prompt([
@@ -330,6 +356,7 @@ class TotalBudgetByDepartment {
                     `, (err2, res2) => {
                         if (err2) {
                             console.error(`Could not select from database, ${err2}`);
+                            repeatMainQ();
                         } else {
                             let cost = 0;
                             const roleIds = res2.map((obj) => obj.id);
@@ -340,6 +367,7 @@ class TotalBudgetByDepartment {
                                 `, (err3, res3) => {
                                     if (err3) {
                                         console.error(`Could not select from database, ${err3}`);
+                                        repeatMainQ();
                                     } else {
                                         const employeeCount = res3.length;
                                         cost += res2.find(obj => obj.id === id).salary * employeeCount;
@@ -451,6 +479,7 @@ class DeleteDepartment {
         `, (err, res) => {
             if (err) {
                 console.error(`Could not select from database, ${err}`);
+                repeatMainQ();
             } else {
             const mapped = res.map((dep) => dep.dep_name);
             inquirer.prompt([
@@ -492,6 +521,7 @@ class DeleteRole {
         `, (err, res) => {
             if (err) {
                 console.error(`Could not select from database, ${err}`);
+                repeatMainQ();
             } else {
             const mapped = res.map((role) => role.title);
             inquirer.prompt([
@@ -533,9 +563,9 @@ class DeleteEmployee {
         `, (err, res) => {
             if (err) {
                 console.error(`Could not select from database, ${err}`);
+                repeatMainQ();
             } else {
             const mapped = res.map((employee) => `${employee.first_name} ${employee.last_name}`);
-            console.log(mapped);
             inquirer.prompt([
                 {
                     type: 'list',
@@ -588,7 +618,6 @@ class UpdateEmployeeManager {
                         choices: mapped,
                     }
                 ]).then(({selectedEmployee}) => {
-                    console.log(selectedEmployee);
                     const split = selectedEmployee.split(" ");
                     const firstName = split[0];
                     const lastName = split[1];
